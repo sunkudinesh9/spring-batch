@@ -12,10 +12,9 @@ import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.FileSystemResource;
 
 import com.dineshlearnings.springbatch.model.User;
 
@@ -26,22 +25,17 @@ public class JobConfiguration {
 	public Job job(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
 			ItemReader<User> itemuReader, ItemProcessor<User, User> itemProcessor, ItemWriter<User> itemWriter) {
 
-		Step step = stepBuilderFactory.get("ETL-File-load")
-				.<User, User>chunk(10)
-				.reader(itemuReader)
-				.processor(itemProcessor)
-				.writer(itemWriter)
-				.build();
+		Step step = stepBuilderFactory.get("ETL-File-load").<User, User>chunk(10).reader(itemuReader)
+				.processor(itemProcessor).writer(itemWriter).build();
 
-		return jobBuilderFactory.get("ETL-Load")
-				.start(step).build();
+		return jobBuilderFactory.get("ETL-Load").start(step).build();
 	}
 
 	@Bean
-	public FlatFileItemReader<User> fileReader(@Value("${file.input}") Resource resource) {
+	public FlatFileItemReader<User> fileReader() {
 
 		FlatFileItemReader<User> flatFileItemReader = new FlatFileItemReader<>();
-		flatFileItemReader.setResource(resource);
+		flatFileItemReader.setResource(new FileSystemResource("src/main/resources/user.csv"));
 		flatFileItemReader.setName("CSV-Reader");
 		flatFileItemReader.setLinesToSkip(1);
 		flatFileItemReader.setLineMapper(lineMapper());
